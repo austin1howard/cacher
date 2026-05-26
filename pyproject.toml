@@ -1,7 +1,7 @@
 [project]
 name = "cacher"
 version = "0.1.0"
-description = "Add your description here"
+description = "lightweight caching proxy, with manual cache busting"
 readme = "README.md"
 authors = [
     { name = "Austin Howard", email = "austin@ahoward.io" }
