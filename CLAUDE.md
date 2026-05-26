@@ -36,16 +36,16 @@ curl -i -X POST "http://localhost:8000/refresh?url=https://httpbin.org/get"
 
 ## Architecture
 
-All logic lives in `src/cacher/__init__.py`:
+Modules under `src/cacher/`:
 
-- `Settings` — pydantic-settings class; reads `ALLOWED_HOSTS` env var (comma-separated)
-- `CachedResponse` — frozen dataclass holding `body`, `content_type`, `status_code`
-- `cache` / `lock` — module-level in-memory store and asyncio lock
-- `lifespan` — manages `httpx.AsyncClient` lifecycle; stored on `app.state.client`
-- `validate_url()` — validates URL format and host allowlist
-- `fetch_url()` — async GET via httpx
-- `make_response()` — builds FastAPI `Response` with `X-Cache` header
-- `main()` — entrypoint, runs `uvicorn.run(app)`
+- `runtime_settings.py` — `Settings` (pydantic-settings, reads `ALLOWED_HOSTS`), `CachedResponse` frozen dataclass, module-level `cache` dict and asyncio `lock`
+- `api.py` — `lifespan`, `app`, `validate_url()`, `fetch_url()`, `make_response()`, route handlers, `main()`
+- `__init__.py` — re-exports `app` and `main` so `cacher:app` works
+
+## FastAPI conventions
+
+- Use `Annotated` for query/path parameters — `url: Annotated[str, Query()]` — not `Query(...)` as the default value. See [FastAPI docs](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/#annotated-as-the-type).
+- Use `AfterValidator` (from pydantic) for custom parameter validation instead of calling a validation function manually in the route body. Validators raise `ValueError`; define a named type alias (e.g. `ValidatedUrl`) and reuse it across routes. See [FastAPI docs](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/#custom-validation).
 
 ## Key env vars
 
