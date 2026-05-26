@@ -1,5 +1,7 @@
+import contextlib
 import time
 
+import httpx
 
 import cacher.api as cacher_api
 
@@ -98,3 +100,16 @@ async def test_urls_differing_only_in_query_params_cached_independently(client):
     assert r_a1.headers["x-cache"] == "miss"
     assert r_b.headers["x-cache"] == "miss"
     assert r_a2.headers["x-cache"] == "hit"
+
+
+async def test_upstream_connect_error_returns_502(client, monkeypatch):
+    """A DNS/connection failure must surface as 502, not an unhandled 500."""
+
+    @contextlib.asynccontextmanager
+    async def _failing_stream(*args, **kwargs):
+        raise httpx.ConnectError("Name has no usable address")
+        yield  # makes this an async generator so asynccontextmanager accepts it
+
+    monkeypatch.setattr(cacher_api.app.state.client, "stream", _failing_stream)
+    r = await client.get("/get", params={"url": "http://testupstream/payload"})
+    assert r.status_code == 502

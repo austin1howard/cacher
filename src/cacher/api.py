@@ -112,18 +112,21 @@ async def _get_url_lock(url: str) -> asyncio.Lock:
 async def fetch_url(client: httpx.AsyncClient, url: str) -> CachedResponse:
     # follow_redirects=False: redirects could bypass host validation by
     # pointing at a private/internal address on an allowed domain.
-    async with client.stream("GET", url, follow_redirects=False) as response:
-        chunks: list[bytes] = []
-        total = 0
-        async for chunk in response.aiter_bytes():
-            total += len(chunk)
-            if total > settings.max_response_body_bytes:
-                raise HTTPException(
-                    status_code=502,
-                    detail=f"Upstream response exceeds {settings.max_response_body_bytes} bytes",
-                )
-            chunks.append(chunk)
-        body = b"".join(chunks)
+    try:
+        async with client.stream("GET", url, follow_redirects=False) as response:
+            chunks: list[bytes] = []
+            total = 0
+            async for chunk in response.aiter_bytes():
+                total += len(chunk)
+                if total > settings.max_response_body_bytes:
+                    raise HTTPException(
+                        status_code=502,
+                        detail=f"Upstream response exceeds {settings.max_response_body_bytes} bytes",
+                    )
+                chunks.append(chunk)
+            body = b"".join(chunks)
+    except httpx.TransportError as exc:
+        raise HTTPException(status_code=502, detail=f"Upstream unreachable: {exc}") from exc
     return CachedResponse(
         body=body,
         content_type=response.headers.get("content-type", "application/octet-stream"),
