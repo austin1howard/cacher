@@ -1,0 +1,22 @@
+[project]
+name = "cacher"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Austin Howard", email = "austin@ahoward.io" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.136.3",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.1",
+    "uvicorn[standard]>=0.48.0",
+]
+
+[project.scripts]
+cacher = "cacher:main"
+
+[build-system]
+requires = ["uv_build>=0.11.3,<0.12.0"]
+build-backend = "uv_build"
