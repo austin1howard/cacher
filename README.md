@@ -11,6 +11,22 @@ CACHER_ALLOWED_HOSTS='["httpbin.org"]' uv run cacher
 
 The server starts on `http://0.0.0.0:8000`.
 
+## Docker
+
+```bash
+# build
+finch build -t cacher .
+
+# run
+finch run -p 8000:8000 -e CACHER_ALLOWED_HOSTS='["httpbin.org"]' cacher
+```
+
+A pre-built image is published to the GitHub Container Registry on every push to `master`:
+
+```bash
+finch run -p 8000:8000 -e CACHER_ALLOWED_HOSTS='["httpbin.org"]' ghcr.io/<owner>/cacher:latest
+```
+
 ## Configuration
 
 | Environment variable | Description | Example |

@@ -73,6 +73,21 @@ add a separate `ruff.toml` or `.ruff.toml`. Do not add inline `# noqa`
 comments without a rule code.
 
 
+## Docker
+
+Build and run locally with [Finch](https://github.com/runfinch/finch) (drop in `docker` if preferred):
+
+```bash
+finch build -t cacher .
+finch run -p 8000:8000 -e CACHER_ALLOWED_HOSTS='["httpbin.org"]' cacher
+```
+
+The image is built and pushed to `ghcr.io/<owner>/cacher` on every push to `master` via `.github/workflows/docker.yml`. Pull requests trigger a build-only (no push) run.
+
+Tags produced:
+- `latest` — HEAD of `master`
+- `sha-<short-sha>` — every push
+
 ## Key env vars
 
 | Var | Purpose |
