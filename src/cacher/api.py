@@ -6,9 +6,18 @@ import httpx
 import uvicorn
 from fastapi import FastAPI, Query
 from fastapi.responses import Response
-from pydantic import AfterValidator, HttpUrl, ValidationError
+from pydantic import AfterValidator, BaseModel, HttpUrl, ValidationError
 
-from cacher.runtime_settings import CachedResponse, settings
+from cacher.runtime_settings import settings
+
+
+class CachedResponse(BaseModel):
+    model_config = {"frozen": True}
+
+    body: bytes
+    content_type: str
+    status_code: int
+
 
 cache: dict[str, CachedResponse] = {}
 lock = asyncio.Lock()
