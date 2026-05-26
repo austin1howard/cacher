@@ -8,7 +8,7 @@ async def test_concurrent_gets_single_fetch(client):
     holding the lock, allowing the others to stack up and observe the double-checked
     locking: they block on the lock, then find the cache populated on the inner check.
     """
-    url = "http://localhost/slow"
+    url = "http://testupstream/slow"
     responses = await asyncio.gather(*[client.get("/get", params={"url": url}) for _ in range(10)])
 
     x_caches = [r.headers["x-cache"] for r in responses]
@@ -18,7 +18,11 @@ async def test_concurrent_gets_single_fetch(client):
 
 async def test_concurrent_gets_different_urls(client):
     """Concurrent GETs to distinct URLs all result in cache misses."""
-    urls = ["http://localhost/payload", "http://localhost/text", "http://localhost/counter"]
+    urls = [
+        "http://testupstream/payload",
+        "http://testupstream/text",
+        "http://testupstream/counter",
+    ]
     responses = await asyncio.gather(*[client.get("/get", params={"url": u}) for u in urls])
     for r in responses:
         assert r.headers["x-cache"] == "miss"
@@ -26,7 +30,7 @@ async def test_concurrent_gets_different_urls(client):
 
 async def test_get_and_refresh_interleaved(client):
     """GET (instant cache hit) and refresh run concurrently; final state reflects the refresh."""
-    url = "http://localhost/counter"
+    url = "http://testupstream/counter"
 
     # Seed the cache: counter=1
     seed = await client.get("/get", params={"url": url})
@@ -51,7 +55,7 @@ async def test_get_and_refresh_interleaved(client):
 
 async def test_multiple_concurrent_refreshes(client):
     """5 concurrent refreshes serialize through the lock, each doing one upstream fetch."""
-    url = "http://localhost/counter"
+    url = "http://testupstream/counter"
     responses = await asyncio.gather(*[client.post("/refresh", params={"url": url}) for _ in range(5)])
 
     for r in responses:

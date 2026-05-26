@@ -37,14 +37,28 @@ Request flow in tests
               └─ app.state.client.get(url)          ← injected by client fixture
                    └─ async httpx.AsyncClient (transport=ASGITransport(app=dummy_app))
                         └─ dummy route handler (no network, in-process)
+
+Upstream hostname in tests
+--------------------------
+Tests use "http://testupstream/..." as the upstream base URL.  The host
+"testupstream" is added to the allowed_hosts allowlist by the autouse
+_set_allowed_hosts fixture so that validate_url() accepts it.  Using a
+non-sensitive hostname (not "localhost") also exercises the security check
+that blocks well-known loopback names.
 """
+
+import os
+
+# Must be set before cacher modules are imported so that Settings() sees it and
+# passes the must_not_be_empty validator at construction time.
+os.environ.setdefault("CACHER_ALLOWED_HOSTS", '["testupstream"]')
 
 import asyncio
 
 import httpx
 import pytest
 from fastapi import FastAPI
-from fastapi.responses import PlainTextResponse, Response
+from fastapi.responses import PlainTextResponse, RedirectResponse, Response
 from httpx import ASGITransport
 
 import cacher.api as cacher_api
@@ -105,6 +119,19 @@ async def dummy_text() -> PlainTextResponse:
     return PlainTextResponse("hello text")
 
 
+@dummy_app.get("/redirect")
+async def dummy_redirect() -> RedirectResponse:
+    """Returns a 302 to another path — used to verify redirects are not followed."""
+    return RedirectResponse(url="http://testupstream/payload", status_code=302)
+
+
+@dummy_app.get("/large")
+async def dummy_large() -> Response:
+    """Returns a body larger than MAX_RESPONSE_BODY_BYTES when that constant is
+    monkeypatched to a small value in size-limit tests."""
+    return Response(content=b"x" * 200, media_type="application/octet-stream")
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -112,21 +139,34 @@ async def dummy_text() -> PlainTextResponse:
 
 @pytest.fixture(autouse=True)
 def _clear_cache():
-    """Reset cacher's module-level cache dict before and after every test.
+    """Reset cacher's module-level cache dict and per-URL lock dict before and
+    after every test.
 
-    The cache is intentionally global state in api.py (it lives for the process
+    Both are intentionally global state in api.py (they live for the process
     lifetime in production). Without this fixture every test would inherit
     whatever a prior test cached, making tests order-dependent.
     """
     cacher_api.cache.clear()
+    cacher_api._url_locks.clear()
     yield
     cacher_api.cache.clear()
+    cacher_api._url_locks.clear()
 
 
 @pytest.fixture(autouse=True)
 def _reset_counter():
     """Reset the dummy upstream's fetch counter before every test."""
     _counter["value"] = 0
+
+
+@pytest.fixture(autouse=True)
+def _set_allowed_hosts(monkeypatch):
+    """Allow 'testupstream' in every test.
+
+    The allowlist now fails closed (empty list = reject all), so tests must
+    explicitly permit the fake upstream hostname used in all test URLs.
+    """
+    monkeypatch.setattr(cacher_api.settings, "allowed_hosts", ["testupstream"])
 
 
 @pytest.fixture
@@ -142,7 +182,7 @@ async def client():
     Both clients use ASGITransport so the entire request path stays in-process
     on a single event loop. No sockets, no threads, no network.
     """
-    upstream = httpx.AsyncClient(transport=ASGITransport(app=dummy_app), base_url="http://localhost")
+    upstream = httpx.AsyncClient(transport=ASGITransport(app=dummy_app), base_url="http://testupstream")
     app.state.client = upstream  # inject — cacher's fetch_url will use this
     async with httpx.AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as c:
         yield c
