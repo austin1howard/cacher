@@ -26,7 +26,15 @@ Server runs on `http://0.0.0.0:8000`.
 
 ## Testing
 
-No test suite yet. Smoke-test with:
+Run the test suite:
+
+```bash
+uv run pytest -v
+```
+
+Tests live in `tests/` and use `pytest-asyncio` (`asyncio_mode = "auto"` in `pyproject.toml`). A dummy FastAPI app served via `httpx.ASGITransport` acts as the upstream — no real network calls. The `client` fixture in `conftest.py` wires everything together.
+
+Smoke-test against a live server:
 
 ```bash
 curl http://localhost:8000/healthz
@@ -38,8 +46,8 @@ curl -i -X POST "http://localhost:8000/refresh?url=https://httpbin.org/get"
 
 Modules under `src/cacher/`:
 
-- `runtime_settings.py` — `Settings` (pydantic-settings, reads `CACHER_ALLOWED_HOSTS`), `CachedResponse` frozen dataclass, module-level `cache` dict and asyncio `lock`
-- `api.py` — `lifespan`, `app`, `validate_url()`, `fetch_url()`, `make_response()`, route handlers, `main()`
+- `runtime_settings.py` — `Settings` (pydantic-settings, reads `CACHER_ALLOWED_HOSTS`)
+- `api.py` — `CachedResponse`, module-level `cache` dict and asyncio `lock`, `lifespan`, `app`, `validate_url()`, `fetch_url()`, `make_response()`, route handlers, `main()`
 - `__init__.py` — re-exports `app` and `main` so `cacher:app` works
 
 ## Python conventions
