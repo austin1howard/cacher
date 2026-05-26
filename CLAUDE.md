@@ -17,7 +17,7 @@ uv lock           # regenerate lockfile
 ## Running
 
 ```bash
-ALLOWED_HOSTS='["httpbin.org"]' uv run cacher
+CACHER_ALLOWED_HOSTS='["httpbin.org"]' uv run cacher
 # or
 uvicorn cacher:app --reload
 ```
@@ -38,9 +38,13 @@ curl -i -X POST "http://localhost:8000/refresh?url=https://httpbin.org/get"
 
 Modules under `src/cacher/`:
 
-- `runtime_settings.py` — `Settings` (pydantic-settings, reads `ALLOWED_HOSTS`), `CachedResponse` frozen dataclass, module-level `cache` dict and asyncio `lock`
+- `runtime_settings.py` — `Settings` (pydantic-settings, reads `CACHER_ALLOWED_HOSTS`), `CachedResponse` frozen dataclass, module-level `cache` dict and asyncio `lock`
 - `api.py` — `lifespan`, `app`, `validate_url()`, `fetch_url()`, `make_response()`, route handlers, `main()`
 - `__init__.py` — re-exports `app` and `main` so `cacher:app` works
+
+## Python conventions
+
+- Use pydantic `BaseModel` for data classes, not `dataclass`. Use `model_config = {"frozen": True}` for immutable models.
 
 ## FastAPI conventions
 
@@ -51,4 +55,4 @@ Modules under `src/cacher/`:
 
 | Var | Purpose |
 |---|---|
-| `ALLOWED_HOSTS` | JSON list of hostnames allowed as upstream targets (e.g. `["httpbin.org"]`) |
+| `CACHER_ALLOWED_HOSTS` | JSON list of hostnames allowed as upstream targets (e.g. `["httpbin.org"]`) |

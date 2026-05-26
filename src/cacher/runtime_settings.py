@@ -1,17 +1,18 @@
 import asyncio
-from dataclasses import dataclass
 
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="")
+    model_config = SettingsConfigDict(env_prefix="CACHER_")
 
     allowed_hosts: list[str] = []
 
 
-@dataclass(frozen=True, slots=True)
-class CachedResponse:
+class CachedResponse(BaseModel):
+    model_config = {"frozen": True}
+
     body: bytes
     content_type: str
     status_code: int
