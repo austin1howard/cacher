@@ -51,6 +51,20 @@ Modules under `src/cacher/`:
 - Use `Annotated` for query/path parameters — `url: Annotated[str, Query()]` — not `Query(...)` as the default value. See [FastAPI docs](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/#annotated-as-the-type).
 - Use `AfterValidator` (from pydantic) for custom parameter validation instead of calling a validation function manually in the route body. Validators raise `ValueError`; define a named type alias (e.g. `ValidatedUrl`) and reuse it across routes. See [FastAPI docs](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/#custom-validation).
 
+## Linting and formatting
+This project uses Ruff for both linting and formatting. Do not call Black,
+flake8, isort, or pylint.
+- Lint: `uv run ruff check .`
+- Lint and auto-fix: `uv run ruff check --fix .`
+- Format: `uv run ruff format .`
+- Check formatting without writing: `uv run ruff format --check .`
+- Always invoke Ruff through `uv run` so it resolves to the project's
+  virtual environment.
+Ruff configuration lives in `pyproject.toml` under `[tool.ruff]`. Do not
+add a separate `ruff.toml` or `.ruff.toml`. Do not add inline `# noqa`
+comments without a rule code.
+
+
 ## Key env vars
 
 | Var | Purpose |
