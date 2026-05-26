@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from typing import Annotated
 
@@ -7,7 +8,10 @@ from fastapi import FastAPI, Query
 from fastapi.responses import Response
 from pydantic import AfterValidator, HttpUrl, ValidationError
 
-from cacher.runtime_settings import CachedResponse, cache, lock, settings
+from cacher.runtime_settings import CachedResponse, settings
+
+cache: dict[str, CachedResponse] = {}
+lock = asyncio.Lock()
 
 
 @asynccontextmanager

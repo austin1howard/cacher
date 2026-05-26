@@ -1,5 +1,3 @@
-import asyncio
-
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -19,5 +17,3 @@ class CachedResponse(BaseModel):
 
 
 settings = Settings()
-cache: dict[str, CachedResponse] = {}
-lock = asyncio.Lock()
