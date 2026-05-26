@@ -26,7 +26,7 @@ def validate_url(url: str) -> str:
     except ValidationError:
         raise ValueError(f"Invalid URL: {url}")
     host = parsed.host
-    allowed = settings.allowed_host_list
+    allowed = settings.allowed_hosts
     if allowed and host not in allowed:
         raise ValueError(f"Host not allowed: {host}")
     return str(parsed)

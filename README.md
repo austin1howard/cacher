@@ -6,7 +6,7 @@ Lightweight HTTP caching proxy with manual cache-busting. Fetches and stores rem
 
 ```bash
 uv sync
-ALLOWED_HOSTS="httpbin.org" uv run cacher
+ALLOWED_HOSTS='["httpbin.org"]' uv run cacher
 ```
 
 The server starts on `http://0.0.0.0:8000`.
@@ -15,7 +15,7 @@ The server starts on `http://0.0.0.0:8000`.
 
 | Environment variable | Description | Example |
 |---|---|---|
-| `ALLOWED_HOSTS` | Comma-separated list of permitted upstream hostnames. If unset, all hosts are allowed. | `httpbin.org,api.example.com` |
+| `ALLOWED_HOSTS` | JSON list of permitted upstream hostnames. If unset, all hosts are allowed. | `'["httpbin.org","api.example.com"]'` |
 
 ## Endpoints
 

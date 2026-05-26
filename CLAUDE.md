@@ -17,7 +17,7 @@ uv lock           # regenerate lockfile
 ## Running
 
 ```bash
-ALLOWED_HOSTS="httpbin.org" uv run cacher
+ALLOWED_HOSTS='["httpbin.org"]' uv run cacher
 # or
 uvicorn cacher:app --reload
 ```
@@ -51,4 +51,4 @@ Modules under `src/cacher/`:
 
 | Var | Purpose |
 |---|---|
-| `ALLOWED_HOSTS` | Comma-separated hostnames allowed as upstream targets |
+| `ALLOWED_HOSTS` | JSON list of hostnames allowed as upstream targets (e.g. `["httpbin.org"]`) |
