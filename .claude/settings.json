@@ -1,4 +1,9 @@
 {
+  "permissions": {
+    "deny": [
+      "Read(.claude/archive/**)"
+    ]
+  },
   "extraKnownMarketplaces": {
     "astral-sh": {
       "source": {
