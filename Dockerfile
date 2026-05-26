@@ -18,6 +18,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 FROM alpine
 
+RUN echo 'options single-request' >> /etc/resolv.conf
+
 RUN addgroup -S -g 10001 nonroot \
  && adduser -S -u 10001 -G nonroot nonroot
 
