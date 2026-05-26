@@ -57,7 +57,7 @@ import asyncio
 
 import httpx
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse, RedirectResponse, Response
 from httpx import ASGITransport
 
@@ -130,6 +130,16 @@ async def dummy_large() -> Response:
     """Returns a body larger than MAX_RESPONSE_BODY_BYTES when that constant is
     monkeypatched to a small value in size-limit tests."""
     return Response(content=b"x" * 200, media_type="application/octet-stream")
+
+
+@dummy_app.get("/echo-params")
+async def dummy_echo_params(request: Request) -> dict:
+    """Echoes back all query parameters as a JSON object.
+
+    Used to verify that cacher forwards query parameters from the upstream URL
+    verbatim, rather than stripping or re-encoding them.
+    """
+    return dict(request.query_params)
 
 
 # ---------------------------------------------------------------------------

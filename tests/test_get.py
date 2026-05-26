@@ -74,3 +74,27 @@ async def test_response_too_large_raises(client, monkeypatch):
     # /large returns 200 bytes, which exceeds the patched 100-byte limit
     r = await client.get("/get", params={"url": "http://testupstream/large"})
     assert r.status_code == 502
+
+
+async def test_upstream_query_params_forwarded(client):
+    """Query parameters in the upstream URL must be forwarded verbatim."""
+    url = "http://testupstream/echo-params?foo=bar&baz=qux"
+    r = await client.get("/get", params={"url": url})
+    assert r.status_code == 200
+    assert r.json() == {"foo": "bar", "baz": "qux"}
+
+
+async def test_urls_differing_only_in_query_params_cached_independently(client):
+    """Two URLs that share a path but differ in query params are separate cache entries."""
+    url_a = "http://testupstream/echo-params?key=alpha"
+    url_b = "http://testupstream/echo-params?key=beta"
+
+    r_a1 = await client.get("/get", params={"url": url_a})
+    r_b = await client.get("/get", params={"url": url_b})
+    r_a2 = await client.get("/get", params={"url": url_a})
+
+    assert r_a1.json() == {"key": "alpha"}
+    assert r_b.json() == {"key": "beta"}
+    assert r_a1.headers["x-cache"] == "miss"
+    assert r_b.headers["x-cache"] == "miss"
+    assert r_a2.headers["x-cache"] == "hit"
